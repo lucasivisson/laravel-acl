@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Channel;
 use Illuminate\Http\Request;
 use App\Models\Thread;
+use App\Models\User;
+use Illuminate\Support\Str;
 
 class ThreadController extends Controller
 {
@@ -19,11 +22,22 @@ class ThreadController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request, Channel $channel)
     {
-        $threads = $this->thread->paginate(15);
+        $channelParam = $request->channel;
 
-        return view('thread.index', compact('threads'));
+        if ($channelParam !== null) {
+            $threads = $channel::whereSlug($channelParam)->first();
+            if ($threads === null) {
+                $threads = $this->thread->orderBy('created_at', 'DESC')->paginate(15);
+            } else {
+                $threads = $threads->threads()->paginate(15);
+            }
+        } else {
+            $threads = $this->thread->orderBy('created_at', 'DESC')->paginate(15);
+        }
+
+        return view('threads.index', compact('threads'));
     }
 
     /**
@@ -31,9 +45,11 @@ class ThreadController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(Channel $channel)
     {
-        return view('thread.create');
+        return view('threads.create', [
+            'channels' => $channel->all()
+        ]);
     }
 
     /**
@@ -45,74 +61,94 @@ class ThreadController extends Controller
     public function store(Request $request)
     {
         try {
-            $this->thread->create($request->all());
+            $thread = $request->all();
+            $thread['slug'] = Str::slug($thread['title']);
 
-            dd('Tópico criado com sucesso');
+            $user = User::find(1);
+            $thread = $user->threads()->create($thread);
+
+            flash('Tópico criado com sucesso')->success();
+            return redirect()->route('threads.show', $thread->slug);
         } catch (\Exception $e) {
-            dd($e->getMessage());
+            $message = env('APP_DEBUG') ? $e->getMessage() : 'Erro ao processar sua requisição!';
+
+            flash($message)->warning();
+            return redirect()->back();
         }
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param  string  $slug
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($slug)
     {
-        return redirect()->route('thread.edit', $id);
+        $thread = $this->thread->whereSlug($slug)->first();
+
+        if (!$thread) return redirect()->route('threads.index');
+
+        return view('threads.show', compact('thread'));
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param  string  $slug
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit($slug)
     {
-        $thread = $this->thread->find($id);
+        $thread = $this->thread->whereSlug($slug)->first();
 
-        return view('thread.edit', compact('threads'));
+        return view('threads.edit', compact('thread'));
     }
 
     /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  string  $slug
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $slug)
     {
         try {
-            $thread = $this->thread->find($id);
+            $thread = $this->thread->whereSlug($slug)->first();
 
             $thread->update($request->all());
 
-            dd('Tópico atualizado com sucesso');
+            flash('Tópico atualizado com sucesso')->success();
+            return redirect()->route('threads.show', $slug);
         } catch (\Exception $e) {
-            dd($e->getMessage());
+            $message = env('APP_DEBUG') ? $e->getMessage() : 'Erro ao processar sua requisição!';
+
+            flash($message)->warning();
+            return redirect()->back();
         }
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  string  $slug
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($slug)
     {
         try {
-            $thread = $this->thread->find($id);
+            $thread = $this->thread->whereSlug($slug)->first();
 
             $thread->delete();
 
-            dd('Tópico removido com sucesso');
+            flash('Tópico removido com sucesso!')->success();
+            return redirect()->route('threads.index');
         } catch (\Exception $e) {
-            dd($e->getMessage());
+            $message = env('APP_DEBUG') ? $e->getMessage() : 'Erro ao processar sua requisição!';
+
+            flash($message)->warning();
+            return redirect()->back();
         }
     }
 }
