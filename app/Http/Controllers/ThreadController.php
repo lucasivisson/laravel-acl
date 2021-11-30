@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Channel;
 use Illuminate\Http\Request;
+use App\Models\Channel;
 use App\Models\Thread;
 use App\Models\User;
 use Illuminate\Support\Str;
+use App\Http\Requests\ThreadRequest;
+use Illuminate\Support\Facades\Gate;
 
 class ThreadController extends Controller
 {
@@ -24,6 +26,12 @@ class ThreadController extends Controller
      */
     public function index(Request $request, Channel $channel)
     {
+        //$this->authorize('access-index-threads');
+
+        if (!Gate::allows('access-index-threads')) {
+            dd('Não tenho permissão!');
+        }
+
         $channelParam = $request->channel;
 
         if ($channelParam !== null) {
@@ -55,10 +63,10 @@ class ThreadController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  ThreadRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(ThreadRequest $request)
     {
         try {
             $thread = $request->all();
@@ -71,7 +79,6 @@ class ThreadController extends Controller
             return redirect()->route('threads.show', $thread->slug);
         } catch (\Exception $e) {
             $message = env('APP_DEBUG') ? $e->getMessage() : 'Erro ao processar sua requisição!';
-
             flash($message)->warning();
             return redirect()->back();
         }
@@ -108,11 +115,11 @@ class ThreadController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  ThreadRequest  $request
      * @param  string  $slug
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $slug)
+    public function update(ThreadRequest $request, $slug)
     {
         try {
             $thread = $this->thread->whereSlug($slug)->first();

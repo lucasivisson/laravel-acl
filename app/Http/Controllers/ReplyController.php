@@ -4,10 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Thread;
+use App\Http\Requests\ReplyRequest;
 
 class ReplyController extends Controller
 {
-    public function store(Request $request)
+    public function store(ReplyRequest $request)
     {
         try {
             $reply = $request->all();

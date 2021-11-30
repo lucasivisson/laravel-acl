@@ -10,11 +10,17 @@
     <div class="col-12">
         @forelse ($threads as $thread)
             <div class="list-group">
-                <a href="{{ route('threads.show', $thread->slug) }}" class="list-group-item list-group-item-action">
-                    <h5>{{$thread->title}}</h5>
-                    <small>Criado em {{$thread->created_at->diffForHumans()}} por {{$thread->user->name}}</small>
-                    <span class="badge badge-primary">{{$thread->channel->name}}</span>
-                    </a>
+                <a href="{{ route('threads.show', $thread->slug) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5>{{$thread->title}}</h5>
+                        <small>Criado em {{$thread->created_at->diffForHumans()}} por {{$thread->user->name}}</small>
+                        <span class="badge badge-primary">{{$thread->channel->name}}</span>
+                    </div>
+
+                    @can('access-index-thread');
+                    <span class="badge badge-warning badge-pill">{{$thread->replies->count()}}</span>
+                    @endcan
+                </a>
             </div>
         @empty
             <div class="alert alert-warning">

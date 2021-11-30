@@ -25,6 +25,12 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        //
+        Gate::define('access-index-thread', function ($user) {
+            return $user->isAdmin();
+        });
+
+        Gate::define('access-create-thread', function ($user) {
+            return false;
+        });
     }
 }
