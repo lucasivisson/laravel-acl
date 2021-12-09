@@ -29,7 +29,6 @@ class ThreadController extends Controller
         //$this->authorize('access-index-threads');
 
         if (!Gate::allows('access-index-threads')) {
-            dd('Não tenho permissão!');
         }
 
         $channelParam = $request->channel;
@@ -108,6 +107,8 @@ class ThreadController extends Controller
     public function edit($slug)
     {
         $thread = $this->thread->whereSlug($slug)->first();
+
+        $this->authorize('update', $thread);
 
         return view('threads.edit', compact('thread'));
     }

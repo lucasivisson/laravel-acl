@@ -15,6 +15,7 @@
                 <div class="card-body">
                     {{$thread->body}}
                 </div>
+                @can('update', $thread)
                 <div class="card-footer">
                     <a href="{{ route('threads.edit', $thread->slug) }}" class="btn btn-sm btn-primary">Editar</a>
                     <a href="#" class="btn btn-sm btn-danger"
@@ -24,6 +25,7 @@
                         @method(('DELETE'))
                     </form>
                 </div>
+                @endcan
             </div>
             <hr>
         </div>

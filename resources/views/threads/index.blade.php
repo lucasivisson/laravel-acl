@@ -16,10 +16,7 @@
                         <small>Criado em {{$thread->created_at->diffForHumans()}} por {{$thread->user->name}}</small>
                         <span class="badge badge-primary">{{$thread->channel->name}}</span>
                     </div>
-
-                    @can('access-index-thread');
                     <span class="badge badge-warning badge-pill">{{$thread->replies->count()}}</span>
-                    @endcan
                 </a>
             </div>
         @empty
